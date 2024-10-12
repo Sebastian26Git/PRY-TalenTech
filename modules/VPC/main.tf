@@ -1,262 +1,150 @@
-################################
-#  Autor: Sebastián Barón Rivera
-#  Versión: 1.0.0
-#  Fecha: 11/10/2024
-################################
+/*====
+The EKS
+======*/
 
-provider "aws" {
-  region = var.region
-}
-
-data "aws_availability_zones" "az" {
-  state = "available"
-}
-
-#####
-# VPC
-#####
 resource "aws_vpc" "vpc" {
-  count                = var.enable_vpc ? 1 : 0
-  cidr_block           = var.vpc_cidr
-  enable_dns_support   = var.enable_dns_support
-  enable_dns_hostnames = var.enable_dns_hostnames
+  cidr_block           = "${var.vpc_cidr}"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
 
-  tags = merge(var.resource_tags, {
-    Name = "vpc-${var.proyecto}"
-  })
-}
-
-
-
-###############
-# Public Subnet
-###############
-resource "aws_subnet" "public_subnets" {
-  for_each                = { for k, v in var.public_subnet_cidrs : k => v if v != null }
-  cidr_block              = each.value["cidr_block"]
-  vpc_id                  = var.vpc_id
-  map_public_ip_on_launch = false
-  availability_zone       = data.aws_availability_zones.az.names[each.value["availability_zone_index"]]
-
-  tags = merge(var.resource_tags, {
-    Name = "subnet-public-${each.key}"
-  })
-}
-
-###########################
-# Route Table Subnet Public
-###########################
-resource "aws_route_table" "public_route_table" {
-  for_each = var.public_subnet_cidrs
-  vpc_id   = var.vpc_id
-
-  tags = merge(var.resource_tags, {
-    Name = "public-rt-${var.proyecto}"
-  })
-
-}
-
-#######################################
-# Route Table Association Subnet Public
-#######################################
-resource "aws_route_table_association" "public_route_table_association" {
-  for_each = var.public_subnet_cidrs
-
-  subnet_id      = aws_subnet.public_subnets[each.key].id
-  route_table_id = aws_route_table.public_route_table[each.key].id
-  depends_on = [
-    aws_subnet.public_subnets,
-    aws_route_table.public_route_table,
-  ]
-}
-
-################
-# Private Subnet
-################
-resource "aws_subnet" "private_subnets" {
-  for_each = { for k, v in var.private_subnet_cidrs : k => v if v != null }
-
-  cidr_block              = each.value["cidr_block"]
-  vpc_id                  = var.vpc_id
-  map_public_ip_on_launch = false
-  availability_zone       = data.aws_availability_zones.az.names[each.value["availability_zone_index"]]
-
-  tags = merge(var.resource_tags, {
-    Name = "subnet-private-${each.key}"
-  })
-
-}
-
-############################
-# Route Table Subnet private
-############################
-resource "aws_route_table" "private_route_table" {
-  for_each = var.private_subnet_cidrs
-  vpc_id   = var.vpc_id
-
-  tags = merge(var.resource_tags, {
-    Name = "private-rt-${var.proyecto}"
-  })
-
-}
-
-########################################
-# Route Table Association Subnet Private
-########################################
-resource "aws_route_table_association" "private_route_table_association" {
-  for_each       = var.private_subnet_cidrs
-  subnet_id      = aws_subnet.private_subnets[each.key].id
-  route_table_id = aws_route_table.private_route_table[each.key].id
-  depends_on = [
-    aws_subnet.private_subnets,
-    aws_route_table.private_route_table,
-  ]
-}
-
-#####
-# IGW
-#####
-resource "aws_internet_gateway" "igw" {
-  count  = var.enable_internet_gateway ? 1 : 0
-  vpc_id = var.vpc_id
   tags = {
-    Name = "igw-${var.proyecto}"
+    Name        = "${var.environment}-vpc"
+    Environment = "${var.environment}"
   }
 }
 
-#####
-# EIP
-#####
+/*====
+Subnets
+======*/
+/* Internet gateway for the public subnet */
+resource "aws_internet_gateway" "ig" {
+  vpc_id = "${aws_vpc.vpc.id}"
+
+  tags = {
+    Name        = "${var.environment}-igw"
+    Environment = "${var.environment}"
+  }
+}
+
+/* Elastic IP for NAT */
 resource "aws_eip" "nat_eip" {
-  count = lower(var.nat_gateway_connectivity_type) == "public" ? 1 : 0
-  vpc   = true
+  //vpc        = true -- Deprecated
+  domain = "vpc"
+  depends_on = [aws_internet_gateway.ig]
+}
+
+/* NAT */
+resource "aws_nat_gateway" "nat" {
+  allocation_id = "${aws_eip.nat_eip.id}"
+  subnet_id     = "${element(aws_subnet.public_subnet.*.id, 0)}"
+  depends_on    = [aws_internet_gateway.ig]
+
   tags = {
-    Name = "eip-nat-${var.proyecto}"
+    Name        = "nat"
+    Environment = "${var.environment}"
   }
 }
 
+/* Public subnet */
+resource "aws_subnet" "public_subnet" {
+  vpc_id                  = "${aws_vpc.vpc.id}"
+  count                   = "${length(var.public_subnets_cidr)}"
+  cidr_block              = "${element(var.public_subnets_cidr, count.index)}"
+  availability_zone       = "${element(var.availability_zones, count.index)}"
+  map_public_ip_on_launch = true
 
-#############
-# Nat Gateway
-#############
-resource "aws_nat_gateway" "nat_gateway" {
-  count             = var.enable_nat_gateway ? 1 : 0
-  subnet_id         = var.nat_gateway_subnet_id
-  allocation_id     = lower(var.nat_gateway_connectivity_type) == "public" ? element(concat(aws_eip.nat_eip[*].id, [""]), 0) : null
-  connectivity_type = var.nat_gateway_connectivity_type
-
-  tags = merge(var.resource_tags, {
-    Name = "${var.proyecto}-nat-gateway"
-  })
-  depends_on = [
-    aws_eip.nat_eip
-  ]
+  tags = {
+    Name        = "${var.environment}-${element(var.availability_zones, count.index)}-public-subnet"
+    Environment = "${var.environment}"
+  }
 }
 
+/* Private subnet */
+resource "aws_subnet" "private_subnet" {
+  vpc_id                  = "${aws_vpc.vpc.id}"
+  count                   = "${length(var.private_subnets_cidr)}"
+  cidr_block              = "${element(var.private_subnets_cidr, count.index)}"
+  availability_zone       = "${element(var.availability_zones, count.index)}"
+  map_public_ip_on_launch = false
 
-###################
-# Route Nat Gateway
-###################
-resource "aws_route" "nat_gateway_route" {
-  for_each = var.enable_nat_gateway ? toset([for k, v in aws_subnet.private_subnets : k if !var.private_subnet_cidrs[k].skip_natgw_route]) : toset([])
+  tags = {
+    Name        = "${var.environment}-${element(var.availability_zones, count.index)}-private-subnet"
+    Environment = "${var.environment}"
+    "kubernetes.io/role/internal-elb" = "1"
+    "kubernetes.io/cluster/my_eks_cluster" = "owned"
+  }
+}
 
-  route_table_id         = aws_route_table.private_route_table[each.key].id
+/* Routing table for private subnet */
+resource "aws_route_table" "private" {
+  vpc_id = "${aws_vpc.vpc.id}"
+
+  tags = {
+    Name        = "${var.environment}-private-route-table"
+    Environment = "${var.environment}"
+  }
+}
+
+/* Routing table for public subnet */
+resource "aws_route_table" "public" {
+  vpc_id = "${aws_vpc.vpc.id}"
+
+  tags = {
+    Name        = "${var.environment}-public-route-table"
+    Environment = "${var.environment}"
+  }
+}
+
+resource "aws_route" "public_internet_gateway" {
+  route_table_id         = "${aws_route_table.public.id}"
   destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = element(aws_nat_gateway.nat_gateway[*].id, 0)
-
-  depends_on = [
-    aws_route_table.private_route_table,
-    aws_nat_gateway.nat_gateway
-  ]
+  gateway_id             = "${aws_internet_gateway.ig.id}"
 }
 
-
-###################
-# Route Int Gateway
-###################
-resource "aws_route" "internet_gateway_route" {
-  for_each = var.enable_internet_gateway ? toset([for k, v in aws_subnet.public_subnets : k]) : toset([])
-
-  route_table_id         = aws_route_table.public_route_table[each.key].id
+resource "aws_route" "private_nat_gateway" {
+  route_table_id         = "${aws_route_table.private.id}"
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = element(aws_internet_gateway.igw[*].id, 0)
-
-  depends_on = [
-    aws_route_table.public_route_table,
-    aws_internet_gateway.igw
-  ]
+  nat_gateway_id         = "${aws_nat_gateway.nat.id}"
 }
 
-########
-# SG VPC
-########
-resource "aws_security_group" "my_sg" {
-  vpc_id = var.vpc_id
+/* Route table associations */
+resource "aws_route_table_association" "public" {
+  count          = "${length(var.public_subnets_cidr)}"
+  subnet_id      = "${element(aws_subnet.public_subnet.*.id, count.index)}"
+  route_table_id = "${aws_route_table.public.id}"
+}
+
+resource "aws_route_table_association" "private" {
+  count          = "${length(var.private_subnets_cidr)}"
+  subnet_id      = "${element(aws_subnet.private_subnet.*.id, count.index)}"
+  route_table_id = "${aws_route_table.private.id}"
+}
+
+/*====
+VPC's Default Security Group
+======*/
+resource "aws_security_group" "default" {
+  name        = "${var.environment}-default-sg"
+  description = "Default security group to allow inbound/outbound from the VPC"
+  vpc_id      = "${aws_vpc.vpc.id}"
+  depends_on  = [aws_vpc.vpc]
+
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port = "0"
+    to_port   = "0"
+    protocol  = "-1"
+    self      = true
   }
+
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port = "0"
+    to_port   = "0"
+    protocol  = "-1"
+    self      = "true"
   }
+
   tags = {
-    Name = "sg-vpc-${var.proyecto}"
+    Environment = "${var.environment}"
   }
 }
 
-###############
-# VPC Flow Logs
-###############
-resource "aws_iam_role" "iam_role_vpc_flow_logs" {
-  name = "${var.proyecto}-iam-role-vpc-flow-logs"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "vpc-flow-logs.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "cloudwatch_policy" {
-  name = "${var.proyecto}-iam-policy-vpc-flow-logs"
-  role = aws_iam_role.iam_role_vpc_flow_logs.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:DescribeLogGroups",
-        "logs:DescribeLogStreams"
-      ],
-      "Effect": "Allow",
-      "Resource": "${aws_cloudwatch_log_group.log_group.arn}:*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_cloudwatch_log_group" "log_group" {
-  name              = "${var.proyecto}-log_group-flow_log"
-  retention_in_days = var.vpc_logs_retention_in_days
-}

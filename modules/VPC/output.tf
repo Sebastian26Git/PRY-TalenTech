@@ -1,31 +1,23 @@
 output "vpc_id" {
-  description = "The ID of the VPC"
-  value       = element(concat(aws_vpc.vpc[*].id, [""]), 0)
+  value = "${aws_vpc.vpc.id}"
 }
 
-output "public_subnets_ids" {
-  description = "The ID of the public subnet"
-  value       = aws_subnet.public_subnets
-
+output "public_subnets_id" {
+  value = ["${aws_subnet.public_subnet.*.id}"]
 }
 
-output "private_subnets_ids" {
-  description = "The ID of the private subnet"
-  value       = aws_subnet.private_subnets
-
+output "private_subnets_id" {
+  value = ["${aws_subnet.private_subnet.*.id}"]
 }
 
-output "internet_gateway_id" {
-  value = aws_internet_gateway.igw[*].id
+output "default_sg_id" {
+  value = "${aws_security_group.default.id}"
 }
 
-output "nat_gateway_id" {
-  description = "nat gateway id"
-  value       = aws_nat_gateway.nat_gateway[*].id
-
+output "security_groups_ids" {
+  value = ["${aws_security_group.default.id}"]
 }
 
-output "security_group_id" {
-  value = aws_security_group.my_sg.id
+output "public_route_table" {
+  value = "${aws_route_table.public.id}"
 }
-

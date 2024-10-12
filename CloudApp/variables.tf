@@ -1,36 +1,25 @@
-variable "vpc_id" {
-  type    = string
-  default = null
+###############
+# Variables VPC
+###############
+
+variable "region" {
+  description = "us-east-1"
+}
+
+variable "environment" {
+  description = "The Deployment environment"
 }
 
 variable "vpc_cidr" {
-  type = string
+  description = "The CIDR block of the vpc"
 }
 
-
-variable "private_subnets" {
-  type = map(object({
-    cidr_block              = string
-    availability_zone_index = number
-    is_twg_attachment       = bool
-  }))
+variable "public_subnets_cidr" {
+  type        = list
+  description = "The CIDR block for the public subnet"
 }
 
-variable "public_subnets" {
-  type = map(object({
-    cidr_block              = string
-    availability_zone_index = number
-    is_twg_attachment       = bool
-  }))
-  default = {}
-}
-
-variable "nat_gateway_subnet_id" {
-  type    = string
-  default = ""
-}
-
-variable "connectivity_type" {
-  type    = string
-  default = ""
+variable "private_subnets_cidr" {
+  type        = list
+  description = "The CIDR block for the private subnet"
 }

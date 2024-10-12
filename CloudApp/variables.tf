@@ -68,7 +68,7 @@ variable "multiaz"{
   default     = true
 }
 
-variable "version" {
+variable "version_db" {
   description = "Version de MySQL"
   type        = string
   default     = "8.0"

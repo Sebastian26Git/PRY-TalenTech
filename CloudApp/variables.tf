@@ -34,9 +34,3 @@ variable "connectivity_type" {
   type    = string
   default = ""
 }
-
-variable "transit_gateway_id" {
-  type        = string
-  default     = null
-  description = "(Required) Identifier of EC2 Transit Gateway."
-}

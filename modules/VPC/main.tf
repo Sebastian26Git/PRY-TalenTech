@@ -260,14 +260,3 @@ resource "aws_cloudwatch_log_group" "log_group" {
   name              = "${var.proyecto}-log_group-flow_log"
   retention_in_days = var.vpc_logs_retention_in_days
 }
-
-resource "aws_flow_log" "flow_log" {
-  iam_role_arn    = aws_iam_role.iam_role_vpc_flow_logs.arn
-  log_destination = aws_cloudwatch_log_group.log_group.arn
-  traffic_type    = "ALL"
-  vpc_id          = var.vpc_id
-
-  tags = merge(var.resource_tags, {
-    Name = "${var.proyecto}-flow_log"
-  })
-}

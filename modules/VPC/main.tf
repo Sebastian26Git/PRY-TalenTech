@@ -16,11 +16,11 @@ data "aws_availability_zones" "az" {
 # VPC
 #####
 resource "aws_vpc" "vpc" {
-  count      = var.enable_vpc ? 1 : 0
-  cidr_block = var.vpc_cidr
-  enable_dns_support = var.enable_dns_support
+  count                = var.enable_vpc ? 1 : 0
+  cidr_block           = var.vpc_cidr
+  enable_dns_support   = var.enable_dns_support
   enable_dns_hostnames = var.enable_dns_hostnames
-  
+
   tags = merge(var.resource_tags, {
     Name = "vpc-${var.proyecto}"
   })
@@ -32,9 +32,9 @@ resource "aws_vpc" "vpc" {
 # Public Subnet
 ###############
 resource "aws_subnet" "public_subnets" {
-  for_each = { for k, v in var.public_subnet_cidrs : k => v if v != null }
+  for_each                = { for k, v in var.public_subnet_cidrs : k => v if v != null }
   cidr_block              = each.value["cidr_block"]
-  vpc_id                  = aws_vpc.vpc.id
+  vpc_id                  = var.vpc_id
   map_public_ip_on_launch = false
   availability_zone       = data.aws_availability_zones.az.names[each.value["availability_zone_index"]]
 
@@ -48,10 +48,10 @@ resource "aws_subnet" "public_subnets" {
 ###########################
 resource "aws_route_table" "public_route_table" {
   for_each = var.public_subnet_cidrs
-  vpc_id = aws_vpc.vpc.id
- 
+  vpc_id   = var.vpc_id
+
   tags = merge(var.resource_tags, {
-     Name = "public-rt-${var.proyecto}"
+    Name = "public-rt-${var.proyecto}"
   })
 
 }
@@ -77,7 +77,7 @@ resource "aws_subnet" "private_subnets" {
   for_each = { for k, v in var.private_subnet_cidrs : k => v if v != null }
 
   cidr_block              = each.value["cidr_block"]
-  vpc_id                  = aws_vpc.vpc.id
+  vpc_id                  = var.vpc_id
   map_public_ip_on_launch = false
   availability_zone       = data.aws_availability_zones.az.names[each.value["availability_zone_index"]]
 
@@ -92,7 +92,7 @@ resource "aws_subnet" "private_subnets" {
 ############################
 resource "aws_route_table" "private_route_table" {
   for_each = var.private_subnet_cidrs
-  vpc_id = aws_vpc.vpc.id
+  vpc_id   = var.vpc_id
 
   tags = merge(var.resource_tags, {
     Name = "private-rt-${var.proyecto}"
@@ -104,7 +104,7 @@ resource "aws_route_table" "private_route_table" {
 # Route Table Association Subnet Private
 ########################################
 resource "aws_route_table_association" "private_route_table_association" {
-  for_each = var.private_subnet_cidrs
+  for_each       = var.private_subnet_cidrs
   subnet_id      = aws_subnet.private_subnets[each.key].id
   route_table_id = aws_route_table.private_route_table[each.key].id
   depends_on = [
@@ -117,8 +117,8 @@ resource "aws_route_table_association" "private_route_table_association" {
 # IGW
 #####
 resource "aws_internet_gateway" "igw" {
-  count = var.enable_internet_gateway ? 1 : 0
-  vpc_id = aws_vpc.vpc.id
+  count  = var.enable_internet_gateway ? 1 : 0
+  vpc_id = var.vpc_id
   tags = {
     Name = "igw-${var.proyecto}"
   }
@@ -191,7 +191,7 @@ resource "aws_route" "internet_gateway_route" {
 # SG VPC
 ########
 resource "aws_security_group" "my_sg" {
-  vpc_id = aws_vpc.vpc.id
+  vpc_id = var.vpc_id
   ingress {
     from_port   = 0
     to_port     = 0
@@ -265,7 +265,7 @@ resource "aws_flow_log" "flow_log" {
   iam_role_arn    = aws_iam_role.iam_role_vpc_flow_logs.arn
   log_destination = aws_cloudwatch_log_group.log_group.arn
   traffic_type    = "ALL"
-  vpc_id          = aws_vpc.vpc.id
+  vpc_id          = var.vpc_id
 
   tags = merge(var.resource_tags, {
     Name = "${var.proyecto}-flow_log"

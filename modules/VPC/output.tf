@@ -1,5 +1,6 @@
 output "vpc_id" {
-  value = aws_vpc.my_vpc.id
+  description = "The ID of the VPC"
+  value       = element(concat(aws_vpc.vpc[*].id, [""]), 0)
 }
 
 output "public_subnet_id" {

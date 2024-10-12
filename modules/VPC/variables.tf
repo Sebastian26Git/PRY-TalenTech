@@ -3,6 +3,11 @@ variable "region" {
   default     = "us-east-1"
 }
 
+variable "vpc_id" {
+  type        = string
+  default     = null
+  description = "(Required) The VPC ID."
+}
 variable "vpc_cidr" {
   description = "CIDR block para la VPC"
   default     = "10.0.0.0/16"
@@ -19,49 +24,49 @@ variable "private_subnet_cidr" {
 }
 
 variable "resource_tags" {
- type = map(string)
-    description = "Tags para los recursos"
-    default = {
-        project_name = "TalenTech"
-    }
+  type        = map(string)
+  description = "Tags para los recursos"
+  default = {
+    project_name = "TalenTech"
+  }
 }
 
-variable "enable_vpc"{
-    type = bool
-    description = "Enable VPC creation"
-    default = true
+variable "enable_vpc" {
+  type        = bool
+  description = "Enable VPC creation"
+  default     = true
 }
 
 variable "enable_dns_support" {
-    type = bool
-    description = "Enable DNS support"
-    default = true
+  type        = bool
+  description = "Enable DNS support"
+  default     = true
 }
 
 variable "enable_dns_hostnames" {
-    type = bool
-    description = "Enable DNS hostnames"
-    default = true
+  type        = bool
+  description = "Enable DNS hostnames"
+  default     = true
 }
 
-variable "proyecto"{
-    type = string
-    description = "Nombre del proyecto"
-    default = "TalenTech"
+variable "proyecto" {
+  type        = string
+  description = "Nombre del proyecto"
+  default     = "TalenTech"
 }
 
 
 variable "private_subnet_cidrs" {
-  type    = map(any)
+  type        = map(any)
   description = "CIDR block para la subred privada"
-  default = {}
+  default     = {}
 }
 
 
 variable "public_subnet_cidrs" {
-  type    = map(any)
+  type        = map(any)
   description = "CIDR block para la subred pública"
-  default = {}
+  default     = {}
 }
 
 

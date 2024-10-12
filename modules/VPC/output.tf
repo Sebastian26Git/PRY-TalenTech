@@ -3,12 +3,16 @@ output "vpc_id" {
   value       = element(concat(aws_vpc.vpc[*].id, [""]), 0)
 }
 
-output "public_subnet_id" {
-  value = aws_subnet.public_subnet.id
+output "public_subnets_ids" {
+  description = "The ID of the public subnet"
+  value       = aws_subnet.public_subnets
+
 }
 
-output "private_subnet_id" {
-  value = aws_subnet.private_subnet.id
+output "private_subnets_ids" {
+  description = "The ID of the private subnet"
+  value       = aws_subnet.private_subnets
+
 }
 
 output "internet_gateway_id" {
@@ -16,7 +20,9 @@ output "internet_gateway_id" {
 }
 
 output "nat_gateway_id" {
-  value = aws_nat_gateway.nat_gw.id
+  description = "nat gateway id"
+  value       = aws_nat_gateway.nat_gateway[*].id
+
 }
 
 output "security_group_id" {

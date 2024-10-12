@@ -7,12 +7,12 @@ variable "vpc_cidr" {
 }
 
 variable "public_subnets_cidr" {
-  type        = list
+  type        = list(any)
   description = "The CIDR block for the public subnet"
 }
 
 variable "private_subnets_cidr" {
-  type        = list
+  type        = list(any)
   description = "The CIDR block for the private subnet"
 }
 
@@ -21,7 +21,7 @@ variable "region" {
 }
 
 variable "availability_zones" {
-  type        = list
+  type        = list(any)
   description = "The az that the resources will be launched"
 }
 
@@ -47,4 +47,16 @@ variable "db_instance_username" {
 
 variable "db_instance_password" {
   description = "The password for the RDS MySQL database."
+}
+
+variable "proyecto" {
+  description = "Nombre del proyecto"
+  type        = string
+  default     = "TalenTech"
+}
+
+variable "multiaz" {
+  description = "Seleccion de si es Multi AZ o no"
+  type        = bool
+  default     = true
 }

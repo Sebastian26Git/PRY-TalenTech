@@ -23,7 +23,7 @@ module "vpc-reg1" {
 # Module RDS
 ############
 module "rds" {
-  source = "terraform-aws-modules/rds/aws"
+  source                 = "terraform-aws-modules/rds/aws"
   identifier             = "CloudApp-rds-instance"
   engine                 = "mysql"
   major_engine_version   = "8.0"
@@ -36,7 +36,7 @@ module "rds" {
   multi_az               = true
   skip_final_snapshot    = true
   vpc_security_group_ids = aws_security_group.rds_security_group
-  subnet_ids             = module.vpc.private_subnets_id
+  subnet_ids             = module.vpc-reg1.private_subnets_id
   tags = {
     Name     = "CloudApp-rds-instance"
     Ambiente = var.environment

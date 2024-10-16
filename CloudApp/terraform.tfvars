@@ -10,6 +10,3 @@ private_subnets_cidr = ["10.130.0.128/26", "10.130.0.192/26"]
 ###############
 # Variables RDS
 ###############
-# db_instance_username = "admin"
-# db_instance_password = "abc123*"
-# db_instance_identifier = "proyecto-rds"

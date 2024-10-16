@@ -22,19 +22,5 @@ module "vpc-reg1" {
 ############
 # Module RDS
 ############
-# module "rds"{
-#   source                 = "../modules/RDS"
-#   identifier             = var.db_instance_identifier
-#   engine                 = var.engine
-#   version                = var.version
-#   port                   = 3306
-#   multi_az               = true
-#   allocated_storage      = 30
-#   max_allocated_storage  = 50
-#   username               = var.db_instance_username
-#   password               = var.db_instance_password
-#   db_subnet_group_name   = aws_db_subnet_group.sub_gr.name
-#   vpc_id               = module.vpc-reg1.vpc_id
-#   private_subnet_ids   = module.vpc-reg1.private_subnets
-#}
+
  

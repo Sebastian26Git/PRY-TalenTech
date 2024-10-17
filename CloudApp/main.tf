@@ -207,7 +207,7 @@ data "aws_iam_policy_document" "lb_controller_assume_role_policy" {
 
 resource "aws_iam_role_policy_attachment" "lb_controller_policy_attachment" {
   role       = aws_iam_role.lb_controller_role.name
-  policy_arn = "arn:aws:iam::325722949361:policy/AWSLoadBalancerControllerIAMPolicy"
+  policy_arn = "arn:aws:iam::632333029035:policy/AWSLoadBalancerControllerIAMPolicy"
 }
 
 #############

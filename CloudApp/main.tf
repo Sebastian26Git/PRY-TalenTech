@@ -91,8 +91,8 @@ module "eks" {
   }
 
   vpc_id                   = module.vpc-reg1.vpc_id
-  subnet_ids               = "${module.vpc-reg1.private_subnets_id}"
-  control_plane_subnet_ids = "${module.vpc-reg1.private_subnets_id}"
+  subnet_ids               = module.vpc-reg1.private_subnets_id
+  control_plane_subnet_ids = module.vpc-reg1.private_subnets_id
 
   # EKS Managed Node Group(s)
   eks_managed_node_group_defaults = {

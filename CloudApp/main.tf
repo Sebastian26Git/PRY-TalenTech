@@ -181,11 +181,6 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
 ############################
 # Creación de ALB Controller
 ############################
-resource "aws_iam_openid_connect_provider" "openid_connect_provider" {
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = ["9e99a48a9960b14926bb7f3b0d5af3c095d1e66e"]  # Este es el thumbprint para los clusters de AWS
-  url             = module.eks.cluster_oidc_issuer_url
-}
 
 ###################
 # Rol LB Controller
@@ -200,7 +195,7 @@ data "aws_iam_policy_document" "lb_controller_assume_role_policy" {
     actions = ["sts:AssumeRoleWithWebIdentity"]
     principals {
       type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.openid_connect_provider.arn]
+      identifiers = [module.eks.oidc_provider_arn]
     }
     condition {
       test     = "StringEquals"

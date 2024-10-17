@@ -22,10 +22,12 @@ module "vpc-reg1" {
 ############
 # Module RDS
 ############
+locals {
+  name        = rds-instance
+}
 module "rds" {
   source                 = "terraform-aws-modules/rds/aws"
   identifier             = "CloudApp-rds-instance"
-  name                   = "CloudApp-rds-instance"
   engine                 = "mysql"
   major_engine_version   = "8.0"
   family                 = "mysql8.0"

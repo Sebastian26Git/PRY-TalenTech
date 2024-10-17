@@ -23,7 +23,7 @@ module "vpc-reg1" {
 # Module RDS
 ############
 locals {
-  name        = rds-instance
+  name        = "rds-instance"
 }
 module "rds" {
   source                 = "terraform-aws-modules/rds/aws"
@@ -49,7 +49,7 @@ module "rds" {
 
 resource "aws_security_group" "rds_security_group" {
   name_prefix = "rds-sg"
-  vpc_id      = [module.vpc-reg1.vpc_id]
+  vpc_id      = module.vpc-reg1.vpc_id
 
   ingress {
     from_port   = 3306 # recomendable cambiar los puertos por defecto

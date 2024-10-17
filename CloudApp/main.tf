@@ -42,6 +42,7 @@ module "rds" {
   vpc_security_group_ids    = [aws_security_group.rds_security_group.id]
   create_db_option_group    = false
   create_db_parameter_group = false
+  subnet_ids                = module.vpc-reg1.private_subnets_id
 
   tags = {
     Name     = "CloudApp-rds-instance"

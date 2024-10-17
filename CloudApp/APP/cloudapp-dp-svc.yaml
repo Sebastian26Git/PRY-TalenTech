@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudapp-tt-deployment
+  labels:
+    app: cloudapp-tt
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cloudapp-tt
+  template:
+    metadata:
+      labels:
+        app: cloudapp-tt
+    spec:
+      containers:
+      - name: cloudapp-tt-container
+        image: sebastianbaron/cloudapp
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudapp-tt-service
+  labels:
+    app: cloudapp-tt
+spec:
+  type: LoadBalancer
+  selector:
+    app: cloudapp-tt
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

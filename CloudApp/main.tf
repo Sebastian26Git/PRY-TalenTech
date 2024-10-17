@@ -25,6 +25,7 @@ module "vpc-reg1" {
 module "rds" {
   source                 = "terraform-aws-modules/rds/aws"
   identifier             = "CloudApp-rds-instance"
+  name                   = "CloudApp-rds-instance"
   engine                 = "mysql"
   major_engine_version   = "8.0"
   family                 = "mysql8.0"
@@ -36,7 +37,7 @@ module "rds" {
   multi_az               = true
   skip_final_snapshot    = true
   vpc_security_group_ids = aws_security_group.rds_security_group
-  subnet_ids             = module.vpc-reg1.private_subnets_id
+  subnet_ids             = [module.vpc-reg1.private_subnets_id]
   tags = {
     Name     = "CloudApp-rds-instance"
     Ambiente = var.environment
@@ -46,7 +47,7 @@ module "rds" {
 
 resource "aws_security_group" "rds_security_group" {
   name_prefix = "rds-sg"
-  vpc_id      = module.vpc-reg1.vpc_id
+  vpc_id      = [module.vpc-reg1.vpc_id]
 
   ingress {
     from_port   = 3306 # recomendable cambiar los puertos por defecto

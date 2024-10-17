@@ -24,6 +24,7 @@ module "vpc-reg1" {
 ############
 locals {
   name        = "rds-instance"
+  name_prefix        = "rds-instance"
 }
 module "rds" {
   source                 = "terraform-aws-modules/rds/aws"
@@ -55,7 +56,7 @@ resource "aws_security_group" "rds_security_group" {
     from_port   = 3306 # recomendable cambiar los puertos por defecto
     to_port     = 3306
     protocol    = "tcp"
-    cidr_blocks = var.vpc_cidr
+    cidr_blocks = [var.vpc_cidr]
   }
 
   egress {

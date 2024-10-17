@@ -134,7 +134,8 @@ module "eks" {
     # One access entry with a policy associated
     example = {
       kubernetes_groups = []
-      principal_arn     = "arn:aws:iam::632333029035:role/eksro"
+      principal_arn     = aws_iam_role.role_eks.arn
+      #"arn:aws:iam::632333029035:role/eksro"
 
       policy_associations = {
         example = {
@@ -155,3 +156,118 @@ module "eks" {
   }
 }
 
+resource "aws_iam_role" "role_eks" {
+  name = "eks-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "eks.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+
+resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.role_eks.name
+}
+
+
+# resource "aws_iam_openid_connect_provider" "my_aws_iam_openid_connect_provider" {
+#   client_id_list  = ["sts.amazonaws.com"]
+#   thumbprint_list = ["9e99a48a9960b14926bb7f3b0d5af3c095d1e66e"]  # Este es el thumbprint para los clusters de AWS
+#   url             = aws_eks_cluster.my_eks_cluster.identity[0].oidc[0].issuer
+# }
+
+# # Crear el documento de política para permitir que el OIDC provider asuma el rol
+# data "aws_iam_policy_document" "lb_controller_assume_role_policy" {
+#   statement {
+#     actions = ["sts:AssumeRoleWithWebIdentity"]
+#     principals {
+#       type        = "Federated"
+#       identifiers = [aws_iam_openid_connect_provider.my_aws_iam_openid_connect_provider.arn]
+#     }
+#     condition {
+#       test     = "StringEquals"
+#       variable = "${replace(aws_eks_cluster.my_eks_cluster.identity[0].oidc[0].issuer, "https://", "")}:sub"
+#       values   = ["system:serviceaccount:kube-system:aws-load-balancer-controller"]
+#     }
+#   }
+# }
+
+# # Crear el rol de IAM for LB Controller
+# resource "aws_iam_role" "lb_controller_role" {
+#   name               = "eks-lb-controller-role"
+#   assume_role_policy = data.aws_iam_policy_document.lb_controller_assume_role_policy.json
+# }
+
+# # Adjuntar políticas necesarias al rol
+# resource "aws_iam_role_policy_attachment" "lb_controller_policy_attachment" {
+#   role       = aws_iam_role.lb_controller_role.name
+#   policy_arn = "arn:aws:iam::325722949361:policy/AWSLoadBalancerControllerIAMPolicy"
+# }
+
+# resource "kubernetes_service_account" "service-account" {
+#   metadata {
+#     name      = "aws-load-balancer-controller"
+#     namespace = "kube-system"
+#     labels = {
+#       "app.kubernetes.io/name"      = "aws-load-balancer-controller"
+#       "app.kubernetes.io/component" = "controller"
+#     }
+
+#     annotations = {
+#       "eks.amazonaws.com/role-arn"               = aws_iam_role.lb_controller_role.arn
+#       "eks.amazonaws.com/sts-regional-endpoints" = "true"
+#     }
+#   }
+
+#   depends_on = [ aws_eks_cluster.my_eks_cluster ]
+# }
+
+# resource "helm_release" "alb-controller" {
+#   name       = "aws-load-balancer-controller"
+#   repository = "https://aws.github.io/eks-charts"
+#   chart      = "aws-load-balancer-controller"
+#   namespace  = "kube-system"
+#   depends_on = [
+#     kubernetes_service_account.service-account
+#   ]
+
+#   set {
+#     name  = "region"
+#     value = var.region
+#   }
+
+#   set {
+#     name  = "vpcId"
+#     value = var.vpc_id
+#   }
+
+#   set {
+#     name  = "image.repository"
+#     value = "602401143452.dkr.ecr.${var.region}.amazonaws.com/amazon/aws-load-balancer-controller"
+#   }
+
+#   set {
+#     name  = "serviceAccount.create"
+#     value = "false"
+#   }
+
+#   set {
+#     name  = "serviceAccount.name"
+#     value = "aws-load-balancer-controller"
+#   }
+
+#   set {
+#     name  = "clusterName"
+#     value = var.eks_cluster_name
+#   }
+# }

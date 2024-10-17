@@ -43,6 +43,7 @@ module "rds" {
   create_db_option_group    = false
   create_db_parameter_group = false
   subnet_ids                = module.vpc-reg1.private_subnets_id
+  db_subnet_group_name      = aws_db_subnet_group.default.name
 
   tags = {
     Name     = "CloudApp-rds-instance"
@@ -71,6 +72,14 @@ resource "aws_security_group" "rds_security_group" {
 
 }
 
+resource "aws_db_subnet_group" "default" {
+  name       = "db-subnet"
+  subnet_ids = flatten(module.vpc-reg1.private_subnets_id)
+
+  tags = {
+    Name = "db-subnet"
+  }
+}
 
 ############
 # Module EKS

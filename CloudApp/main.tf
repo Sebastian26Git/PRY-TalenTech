@@ -148,7 +148,7 @@ module "eks" {
     }
   }
 
-  
+
   tags = {
     Environment = "production"
     Terraform   = "true"
@@ -211,11 +211,6 @@ resource "aws_iam_role_policy" "lb_controller_policy" {
   policy = local.policy_alb
 }
 
-# resource "aws_iam_role_policy_attachment" "lb_controller_policy_attachment" {
-#   role       = aws_iam_role.lb_controller_role.name
-#   policy_arn = "arn:aws:iam::632333029035:policy/AWSLoadBalancerControllerIAMPolicy"
-# }
-
 #############
 # Creación SA
 #############
@@ -234,7 +229,7 @@ resource "kubernetes_service_account" "service-account" {
     }
   }
 
-  depends_on = [ module.eks ]
+  depends_on = [module.eks]
 }
 
 resource "helm_release" "alb-controller" {

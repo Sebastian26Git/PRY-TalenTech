@@ -74,10 +74,11 @@ resource "aws_subnet" "private_subnet" {
   map_public_ip_on_launch = false
 
   tags = {
-    Name                                   = "${var.environment}-${element(var.availability_zones, count.index)}-private-subnet"
-    Environment                            = "${var.environment}"
-    "kubernetes.io/role/internal-elb"      = "1"
-    "kubernetes.io/cluster/my_eks_cluster" = "owned"
+    Name                                           = "${var.environment}-${element(var.availability_zones, count.index)}-private-subnet"
+    Environment                                    = "${var.environment}"
+    "kubernetes.io/role/internal-elb"              = "1"
+    "kubernetes.io/cluster/cloud-app-talento-tech" = "owned" # Cambiar el nombre del Cluster
+    "kubernetes.io/role/elb"                       = "1"
   }
 }
 

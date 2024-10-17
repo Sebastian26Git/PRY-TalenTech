@@ -39,8 +39,8 @@ module "rds" {
   port                   = 3306
   multi_az               = true
   skip_final_snapshot    = true
-  vpc_security_group_ids = aws_security_group.rds_security_group.id
-  subnet_ids             = module.vpc-reg1.private_subnets_id
+  vpc_security_group_ids = [aws_security_group.rds_security_group.id]
+  subnet_ids             = "${module.vpc-reg1.private_subnets_id}"
   create_db_option_group    = false
   create_db_parameter_group = false
   
